@@ -174,6 +174,9 @@ h1 {
 .day-preview mark[data-color="green"] { background: #d7f2d8; }
 .day-preview mark[data-color="blue"] { background: #d9eaff; }
 .day-preview mark[data-color="pink"] { background: #ffe0ea; }
+.day-preview mark[data-color="orange"] { background: #ffd9b3; }
+.day-preview mark[data-color="purple"] { background: #e7ddff; }
+.day-preview mark[data-color="gray"] { background: #e6e3dd; }
 .day-preview mark {
   border-radius: 4px;
   padding: 0 2px;
@@ -194,6 +197,9 @@ h1 {
 .mark-green { background: #d7f2d8; }
 .mark-blue { background: #d9eaff; }
 .mark-pink { background: #ffe0ea; }
+.mark-orange { background: #ffd9b3; }
+.mark-purple { background: #e7ddff; }
+.mark-gray { background: #e6e3dd; }
 
 .editor {
   min-height: clamp(220px, calc(100vh - 402px), 360px);
@@ -212,6 +218,10 @@ h1 {
 .editor mark[data-color="green"] { background: #d7f2d8; }
 .editor mark[data-color="blue"] { background: #d9eaff; }
 .editor mark[data-color="pink"] { background: #ffe0ea; }
+.editor mark[data-color="orange"] { background: #ffd9b3; }
+.editor mark[data-color="purple"] { background: #e7ddff; }
+.editor mark[data-color="gray"] { background: #e6e3dd; }
+.editor mark { border-radius: 4px; padding: 0 2px; color: inherit; }
 .editor-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; }
 .editor-actions p { margin-bottom: 0; font-size: 0.82rem; }
 
