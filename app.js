@@ -16,6 +16,9 @@ let selectedDate = stripTime(new Date());
 let records = new Map();
 let localMode = false;
 let saveTimer = null;
+let savedRange = null;
+
+const allowedHighlightColors = new Set(['yellow', 'green', 'blue', 'pink', 'orange', 'purple', 'gray']);
 
 function stripTime(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -94,7 +97,6 @@ function htmlToPreview(html) {
 
   if (!source.textContent.trim()) return '';
 
-  const allowedColors = new Set(['yellow', 'green', 'blue', 'pink']);
   const preview = document.createElement('div');
 
   function copySafe(node, target) {
@@ -112,7 +114,7 @@ function htmlToPreview(html) {
       return;
     }
 
-    if (tag === 'mark' && allowedColors.has(node.dataset.color)) {
+    if (tag === 'mark' && allowedHighlightColors.has(node.dataset.color)) {
       const mark = document.createElement('mark');
       mark.dataset.color = node.dataset.color;
       node.childNodes.forEach((child) => copySafe(child, mark));
@@ -258,25 +260,71 @@ function updateEditor() {
   els.editor.innerHTML = records.get(dateKey) || '';
 }
 
-function applyHighlight(color) {
-  els.editor.focus();
+function saveSelection() {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
-
   const range = selection.getRangeAt(0);
   if (!els.editor.contains(range.commonAncestorContainer)) return;
+  savedRange = range.cloneRange();
+}
+
+function restoreSelection() {
+  const selection = window.getSelection();
+  if (!selection || !savedRange) return null;
+  selection.removeAllRanges();
+  selection.addRange(savedRange);
+  return savedRange;
+}
+
+function unwrapElement(element) {
+  const parent = element.parentNode;
+  while (element.firstChild) parent.insertBefore(element.firstChild, element);
+  parent.removeChild(element);
+  parent.normalize();
+}
+
+function unwrapMarksInFragment(fragment) {
+  fragment.querySelectorAll('mark').forEach(unwrapElement);
+  return fragment;
+}
+
+function removeAllHighlights() {
+  els.editor.querySelectorAll('mark').forEach(unwrapElement);
+  scheduleSave();
+}
+
+function applyHighlight(color) {
+  els.editor.focus();
+  const range = restoreSelection();
+  if (!range || range.collapsed || !allowedHighlightColors.has(color)) return;
 
   const mark = document.createElement('mark');
   mark.dataset.color = color;
-  mark.append(range.extractContents());
+  const fragment = unwrapMarksInFragment(range.extractContents());
+  mark.append(fragment);
   range.insertNode(mark);
+
+  const selection = window.getSelection();
   selection.removeAllRanges();
+  savedRange = null;
   scheduleSave();
 }
 
 function clearFormat() {
   els.editor.focus();
-  document.execCommand('removeFormat', false, null);
+  const range = restoreSelection();
+
+  if (!range || range.collapsed) {
+    removeAllHighlights();
+    return;
+  }
+
+  const fragment = unwrapMarksInFragment(range.extractContents());
+  range.insertNode(fragment);
+
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  savedRange = null;
   scheduleSave();
 }
 
@@ -295,9 +343,14 @@ function bindEvents() {
   els.prevMonth.addEventListener('click', () => changeMonth(-1));
   els.nextMonth.addEventListener('click', () => changeMonth(1));
   els.editor.addEventListener('input', scheduleSave);
+  els.editor.addEventListener('mouseup', saveSelection);
+  els.editor.addEventListener('keyup', saveSelection);
+  els.editor.addEventListener('touchend', saveSelection);
   els.saveNow.addEventListener('click', saveRecord);
+  els.clearFormat.addEventListener('mousedown', (event) => event.preventDefault());
   els.clearFormat.addEventListener('click', clearFormat);
   document.querySelectorAll('[data-color]').forEach((button) => {
+    button.addEventListener('mousedown', (event) => event.preventDefault());
     button.addEventListener('click', () => applyHighlight(button.dataset.color));
   });
 }
