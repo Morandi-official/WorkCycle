@@ -2,9 +2,7 @@
 
 一个适合部署到 Cloudflare Pages 的月度工作记录网站。
 
-建议仓库名：`WorkCycle`
-
-建议域名：`worklog.morandi.dpdns.org` 或 `log.morandi.dpdns.org`
+域名：`log.morandi.dpdns.org` 或 `worklog.morandi.dpdns.org`（长域名存在BUG，暂停使用）
 
 ## 功能
 
