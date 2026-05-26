@@ -19,6 +19,15 @@ let saveTimer = null;
 let savedRange = null;
 
 const allowedHighlightColors = new Set(['yellow', 'green', 'blue', 'pink', 'orange', 'purple', 'gray']);
+const styleColorMap = new Map([
+  ['255, 240, 168', 'yellow'],
+  ['215, 242, 216', 'green'],
+  ['217, 234, 255', 'blue'],
+  ['255, 224, 234', 'pink'],
+  ['255, 217, 179', 'orange'],
+  ['231, 221, 255', 'purple'],
+  ['230, 227, 221', 'gray']
+]);
 
 function stripTime(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -91,6 +100,22 @@ function localKey(month) {
   return `workcycle-records:${month}`;
 }
 
+function colorFromElement(node) {
+  const explicit = node.dataset?.color;
+  if (allowedHighlightColors.has(explicit)) return explicit;
+
+  for (const color of allowedHighlightColors) {
+    if (node.classList?.contains(`mark-${color}`) || node.classList?.contains(`mark-${color}-highlight`)) return color;
+  }
+
+  const styleText = `${node.getAttribute?.('style') || ''} ${node.style?.backgroundColor || ''}`.toLowerCase();
+  for (const [rgb, color] of styleColorMap.entries()) {
+    if (styleText.includes(rgb)) return color;
+  }
+
+  return null;
+}
+
 function htmlToPreview(html) {
   const source = document.createElement('div');
   source.innerHTML = html || '';
@@ -114,9 +139,10 @@ function htmlToPreview(html) {
       return;
     }
 
-    if (tag === 'mark' && allowedHighlightColors.has(node.dataset.color)) {
+    const color = colorFromElement(node);
+    if ((tag === 'mark' || tag === 'span') && color) {
       const mark = document.createElement('mark');
-      mark.dataset.color = node.dataset.color;
+      mark.dataset.color = color;
       node.childNodes.forEach((child) => copySafe(child, mark));
       target.append(mark);
       return;
@@ -133,6 +159,17 @@ function htmlToPreview(html) {
 
   source.childNodes.forEach((child) => copySafe(child, preview));
   return preview.innerHTML;
+}
+
+function currentDateKey() {
+  return formatDate(selectedDate);
+}
+
+function syncCurrentRecordPreview() {
+  const dateKey = currentDateKey();
+  const content = els.editor.innerHTML.trim();
+  records.set(dateKey, content);
+  updateDayPreview(dateKey, content);
 }
 
 async function loadMonthRecords() {
@@ -176,10 +213,9 @@ function writeLocalRecord(dateKey, content) {
 }
 
 async function saveRecord() {
-  const dateKey = formatDate(selectedDate);
-  const content = els.editor.innerHTML.trim();
-  records.set(dateKey, content);
-  updateDayPreview(dateKey, content);
+  syncCurrentRecordPreview();
+  const dateKey = currentDateKey();
+  const content = records.get(dateKey) || '';
 
   if (localMode) {
     writeLocalRecord(dateKey, content);
@@ -205,6 +241,7 @@ async function saveRecord() {
 }
 
 function scheduleSave() {
+  syncCurrentRecordPreview();
   clearTimeout(saveTimer);
   els.saveStatus.textContent = '等待自动保存…';
   saveTimer = setTimeout(saveRecord, 650);
@@ -255,7 +292,7 @@ function selectDate(date) {
 }
 
 function updateEditor() {
-  const dateKey = formatDate(selectedDate);
+  const dateKey = currentDateKey();
   els.selectedDateTitle.textContent = displayDate(selectedDate);
   els.editor.innerHTML = records.get(dateKey) || '';
 }
@@ -284,12 +321,16 @@ function unwrapElement(element) {
 }
 
 function unwrapMarksInFragment(fragment) {
-  fragment.querySelectorAll('mark').forEach(unwrapElement);
+  fragment.querySelectorAll('mark, span').forEach((element) => {
+    if (element.tagName.toLowerCase() === 'mark' || colorFromElement(element)) unwrapElement(element);
+  });
   return fragment;
 }
 
 function removeAllHighlights() {
-  els.editor.querySelectorAll('mark').forEach(unwrapElement);
+  els.editor.querySelectorAll('mark, span').forEach((element) => {
+    if (element.tagName.toLowerCase() === 'mark' || colorFromElement(element)) unwrapElement(element);
+  });
   scheduleSave();
 }
 
@@ -300,6 +341,7 @@ function applyHighlight(color) {
 
   const mark = document.createElement('mark');
   mark.dataset.color = color;
+  mark.className = `mark-${color}`;
   const fragment = unwrapMarksInFragment(range.extractContents());
   mark.append(fragment);
   range.insertNode(mark);
