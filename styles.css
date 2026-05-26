@@ -201,9 +201,50 @@ h1 {
 .mark-purple { background: #e7ddff; }
 .mark-gray { background: #e6e3dd; }
 
+.project-link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 12px 13px;
+  border: 1px solid rgba(157, 107, 66, 0.22);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 236, 203, 0.72), rgba(255, 255, 255, 0.88));
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(78, 59, 40, 0.08);
+}
+.project-link-card:hover { transform: translateY(-1px); }
+.project-link-card span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--accent-strong);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.project-link-card strong {
+  display: block;
+  font-size: 0.98rem;
+  line-height: 1.2;
+}
+.project-link-card p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+.project-link-arrow {
+  flex: 0 0 auto;
+  color: var(--accent-strong);
+  font-weight: 900;
+}
+
 .editor {
-  min-height: clamp(220px, calc(100vh - 402px), 360px);
-  max-height: calc(100vh - 320px);
+  min-height: clamp(188px, calc(100vh - 468px), 310px);
+  max-height: calc(100vh - 374px);
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 16px;
