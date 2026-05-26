@@ -56,7 +56,7 @@ h1 {
 .subtitle, #cycleHint, .editor-actions p { color: var(--muted); }
 .subtitle { margin-bottom: 0; font-size: 0.95rem; }
 
-.toolbar, .calendar-card, .editor-card {
+.toolbar, .calendar-card, .editor-card, .project-link-card {
   background: var(--paper);
   border: 1px solid rgba(255,255,255,0.72);
   border-radius: 24px;
@@ -85,7 +85,7 @@ h1 {
 }
 .soft-button { background: #eee8de; color: var(--ink); }
 .primary-button { background: var(--accent); color: white; font-weight: 800; white-space: nowrap; }
-.soft-button:hover, .primary-button:hover, .mark-button:hover { transform: translateY(-1px); }
+.soft-button:hover, .primary-button:hover, .mark-button:hover, .project-link-card:hover { transform: translateY(-1px); }
 
 .legend {
   display: flex;
@@ -109,6 +109,14 @@ h1 {
   grid-template-columns: minmax(720px, 1fr) minmax(300px, 360px);
   gap: 16px;
   align-items: start;
+}
+
+.side-panel {
+  position: sticky;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .calendar-card { padding: 14px; }
@@ -184,8 +192,6 @@ h1 {
 }
 
 .editor-card {
-  position: sticky;
-  top: 12px;
   padding: 16px;
 }
 .editor-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 12px; }
@@ -205,20 +211,15 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin: 0 0 12px;
-  padding: 12px 13px;
-  border: 1px solid rgba(157, 107, 66, 0.22);
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(255, 236, 203, 0.72), rgba(255, 255, 255, 0.88));
+  gap: 12px;
+  padding: 15px 16px;
   color: var(--ink);
   text-decoration: none;
-  box-shadow: 0 10px 24px rgba(78, 59, 40, 0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.project-link-card:hover { transform: translateY(-1px); }
 .project-link-card span {
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
   color: var(--accent-strong);
   font-size: 0.72rem;
   font-weight: 900;
@@ -227,24 +228,31 @@ h1 {
 }
 .project-link-card strong {
   display: block;
-  font-size: 0.98rem;
+  font-size: 1rem;
   line-height: 1.2;
 }
 .project-link-card p {
-  margin: 3px 0 0;
+  margin: 4px 0 0;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   line-height: 1.35;
 }
 .project-link-arrow {
   flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #f0e7dc;
   color: var(--accent-strong);
   font-weight: 900;
 }
 
 .editor {
-  min-height: clamp(188px, calc(100vh - 468px), 310px);
-  max-height: calc(100vh - 374px);
+  min-height: clamp(170px, calc(100vh - 540px), 292px);
+  max-height: calc(100vh - 432px);
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -269,7 +277,7 @@ h1 {
 @media (max-width: 1080px) {
   .app-shell { width: min(100% - 20px, 980px); padding-top: 18px; }
   .workspace { grid-template-columns: 1fr; }
-  .editor-card { position: static; }
+  .side-panel { position: static; }
   .day-cell { min-height: 96px; }
   .editor { min-height: 180px; max-height: none; }
 }
