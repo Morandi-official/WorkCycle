@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WorkCycle</title>
-  <link rel="stylesheet" href="/styles.css?v=9" />
+  <link rel="stylesheet" href="/styles.css?v=10" />
 </head>
 <body>
   <main class="app-shell">
@@ -38,26 +38,7 @@
         <div id="calendarGrid" class="calendar-grid" aria-label="月度日历"></div>
       </section>
 
-      <section class="editor-card" aria-label="每日记录编辑器">
-        <div class="editor-head">
-          <div>
-            <p class="eyebrow small">Selected Day</p>
-            <h2 id="selectedDateTitle">请选择日期</h2>
-          </div>
-          <span id="saveStatus" class="save-status">准备就绪</span>
-        </div>
-
-        <div class="highlight-tools" aria-label="荧光标注工具">
-          <button class="mark-button mark-yellow" data-color="yellow" type="button">黄</button>
-          <button class="mark-button mark-green" data-color="green" type="button">绿</button>
-          <button class="mark-button mark-blue" data-color="blue" type="button">蓝</button>
-          <button class="mark-button mark-pink" data-color="pink" type="button">粉</button>
-          <button class="mark-button mark-orange" data-color="orange" type="button">橙</button>
-          <button class="mark-button mark-purple" data-color="purple" type="button">紫</button>
-          <button class="mark-button mark-gray" data-color="gray" type="button">灰</button>
-          <button id="clearFormat" class="mark-button" type="button">清除</button>
-        </div>
-
+      <aside class="side-panel" aria-label="项目入口与每日记录">
         <a class="project-link-card" href="https://github.com/Morandi-official/Dual-Motor-SMO-Control" target="_blank" rel="noopener noreferrer" aria-label="打开 GitHub 上的 Dual-Motor-SMO-Control 项目主页">
           <div>
             <span>GitHub Project</span>
@@ -67,13 +48,34 @@
           <div class="project-link-arrow" aria-hidden="true">↗</div>
         </a>
 
-        <div id="editor" class="editor" contenteditable="true" aria-label="输入每日工作内容" data-placeholder="在这里记录今天做了什么。选中文字后点击上方按钮，可以添加不同颜色的荧光标注。"></div>
+        <section class="editor-card" aria-label="每日记录编辑器">
+          <div class="editor-head">
+            <div>
+              <p class="eyebrow small">Selected Day</p>
+              <h2 id="selectedDateTitle">请选择日期</h2>
+            </div>
+            <span id="saveStatus" class="save-status">准备就绪</span>
+          </div>
 
-        <div class="editor-actions">
-          <p>自动保存；云端不可用时保存到本地。</p>
-          <button id="saveNow" class="primary-button" type="button">立即保存</button>
-        </div>
-      </section>
+          <div class="highlight-tools" aria-label="荧光标注工具">
+            <button class="mark-button mark-yellow" data-color="yellow" type="button">黄</button>
+            <button class="mark-button mark-green" data-color="green" type="button">绿</button>
+            <button class="mark-button mark-blue" data-color="blue" type="button">蓝</button>
+            <button class="mark-button mark-pink" data-color="pink" type="button">粉</button>
+            <button class="mark-button mark-orange" data-color="orange" type="button">橙</button>
+            <button class="mark-button mark-purple" data-color="purple" type="button">紫</button>
+            <button class="mark-button mark-gray" data-color="gray" type="button">灰</button>
+            <button id="clearFormat" class="mark-button" type="button">清除</button>
+          </div>
+
+          <div id="editor" class="editor" contenteditable="true" aria-label="输入每日工作内容" data-placeholder="在这里记录今天做了什么。选中文字后点击上方按钮，可以添加不同颜色的荧光标注。"></div>
+
+          <div class="editor-actions">
+            <p>自动保存；云端不可用时保存到本地。</p>
+            <button id="saveNow" class="primary-button" type="button">立即保存</button>
+          </div>
+        </section>
+      </aside>
     </section>
   </main>
 
@@ -87,6 +89,6 @@
     </button>
   </template>
 
-  <script src="/app.js?v=9" defer></script>
+  <script src="/app.js?v=10" defer></script>
 </body>
 </html>
