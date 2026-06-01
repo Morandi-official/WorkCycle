@@ -16,6 +16,7 @@ let selectedDate = stripTime(new Date());
 let records = new Map();
 let localMode = false;
 let saveTimer = null;
+let previewTimer = null;
 let savedRange = null;
 
 const allowedHighlightColors = new Set(['yellow', 'green', 'blue', 'pink', 'orange', 'purple', 'gray']);
@@ -165,11 +166,19 @@ function currentDateKey() {
   return formatDate(selectedDate);
 }
 
+function cacheCurrentEditorContent() {
+  records.set(currentDateKey(), els.editor.innerHTML.trim());
+}
+
 function syncCurrentRecordPreview() {
+  cacheCurrentEditorContent();
   const dateKey = currentDateKey();
-  const content = els.editor.innerHTML.trim();
-  records.set(dateKey, content);
-  updateDayPreview(dateKey, content);
+  updateDayPreview(dateKey, records.get(dateKey) || '');
+}
+
+function schedulePreviewSync() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(syncCurrentRecordPreview, 180);
 }
 
 async function loadMonthRecords() {
@@ -241,10 +250,11 @@ async function saveRecord() {
 }
 
 function scheduleSave() {
-  syncCurrentRecordPreview();
+  cacheCurrentEditorContent();
+  schedulePreviewSync();
   clearTimeout(saveTimer);
   els.saveStatus.textContent = '等待自动保存…';
-  saveTimer = setTimeout(saveRecord, 650);
+  saveTimer = setTimeout(saveRecord, 1100);
 }
 
 function renderCalendar() {
@@ -295,79 +305,140 @@ function updateEditor() {
   const dateKey = currentDateKey();
   els.selectedDateTitle.textContent = displayDate(selectedDate);
   els.editor.innerHTML = records.get(dateKey) || '';
+  savedRange = null;
+}
+
+function nodeInsideEditor(node) {
+  if (!node) return false;
+  const element = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+  return Boolean(element && els.editor.contains(element));
+}
+
+function getLiveEditorRange() {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
+  const range = selection.getRangeAt(0);
+  if (!nodeInsideEditor(range.commonAncestorContainer)) return null;
+  return range.cloneRange();
+}
+
+function rangeIsUsable(range) {
+  try {
+    return Boolean(range && !range.collapsed && nodeInsideEditor(range.commonAncestorContainer));
+  } catch {
+    return false;
+  }
 }
 
 function saveSelection() {
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
-  const range = selection.getRangeAt(0);
-  if (!els.editor.contains(range.commonAncestorContainer)) return;
-  savedRange = range.cloneRange();
+  const range = getLiveEditorRange();
+  if (range) savedRange = range;
 }
 
-function restoreSelection() {
+function getUsableRange() {
+  const liveRange = getLiveEditorRange();
+  if (liveRange) {
+    savedRange = liveRange.cloneRange();
+    return liveRange;
+  }
+  return rangeIsUsable(savedRange) ? savedRange.cloneRange() : null;
+}
+
+function restoreRange(range) {
   const selection = window.getSelection();
-  if (!selection || !savedRange) return null;
+  if (!selection || !range) return;
   selection.removeAllRanges();
-  selection.addRange(savedRange);
-  return savedRange;
+  selection.addRange(range);
+}
+
+function placeCaretAfter(node) {
+  const range = document.createRange();
+  range.setStartAfter(node);
+  range.collapse(true);
+  restoreRange(range);
 }
 
 function unwrapElement(element) {
   const parent = element.parentNode;
+  if (!parent) return;
   while (element.firstChild) parent.insertBefore(element.firstChild, element);
   parent.removeChild(element);
   parent.normalize();
 }
 
-function unwrapMarksInFragment(fragment) {
-  fragment.querySelectorAll('mark, span').forEach((element) => {
-    if (element.tagName.toLowerCase() === 'mark' || colorFromElement(element)) unwrapElement(element);
-  });
-  return fragment;
+function isHighlightElement(element) {
+  return element?.tagName?.toLowerCase() === 'mark' || Boolean(colorFromElement(element));
+}
+
+function unwrapHighlightsIn(container) {
+  const elements = Array.from(container.querySelectorAll('mark, span'))
+    .filter(isHighlightElement)
+    .reverse();
+  elements.forEach(unwrapElement);
+  return container;
 }
 
 function removeAllHighlights() {
-  els.editor.querySelectorAll('mark, span').forEach((element) => {
-    if (element.tagName.toLowerCase() === 'mark' || colorFromElement(element)) unwrapElement(element);
-  });
+  Array.from(els.editor.querySelectorAll('mark, span'))
+    .filter(isHighlightElement)
+    .reverse()
+    .forEach(unwrapElement);
+  syncCurrentRecordPreview();
   scheduleSave();
 }
 
 function applyHighlight(color) {
-  els.editor.focus();
-  const range = restoreSelection();
-  if (!range || range.collapsed || !allowedHighlightColors.has(color)) return;
+  if (!allowedHighlightColors.has(color)) return;
 
-  const mark = document.createElement('mark');
-  mark.dataset.color = color;
-  mark.className = `mark-${color}`;
-  const fragment = unwrapMarksInFragment(range.extractContents());
-  mark.append(fragment);
-  range.insertNode(mark);
+  const range = getUsableRange();
+  if (!range) {
+    els.saveStatus.textContent = '请先选中文字';
+    return;
+  }
 
-  const selection = window.getSelection();
-  selection.removeAllRanges();
-  savedRange = null;
-  scheduleSave();
+  els.editor.focus({ preventScroll: true });
+  restoreRange(range);
+
+  try {
+    const mark = document.createElement('mark');
+    mark.dataset.color = color;
+    mark.className = `mark-${color}`;
+    const fragment = unwrapHighlightsIn(range.extractContents());
+    mark.append(fragment);
+    range.insertNode(mark);
+    placeCaretAfter(mark);
+    savedRange = null;
+    syncCurrentRecordPreview();
+    scheduleSave();
+  } catch (error) {
+    console.warn('高亮失败：', error);
+    els.saveStatus.textContent = '高亮失败，请重新选中文字';
+  }
 }
 
 function clearFormat() {
-  els.editor.focus();
-  const range = restoreSelection();
+  const range = getUsableRange();
+  els.editor.focus({ preventScroll: true });
 
-  if (!range || range.collapsed) {
+  if (!range) {
     removeAllHighlights();
     return;
   }
 
-  const fragment = unwrapMarksInFragment(range.extractContents());
-  range.insertNode(fragment);
+  restoreRange(range);
 
-  const selection = window.getSelection();
-  selection.removeAllRanges();
-  savedRange = null;
-  scheduleSave();
+  try {
+    const fragment = unwrapHighlightsIn(range.extractContents());
+    const lastNode = fragment.lastChild;
+    range.insertNode(fragment);
+    if (lastNode) placeCaretAfter(lastNode);
+    savedRange = null;
+    syncCurrentRecordPreview();
+    scheduleSave();
+  } catch (error) {
+    console.warn('清除高亮失败：', error);
+    els.saveStatus.textContent = '清除失败，请重新选中文字';
+  }
 }
 
 async function changeMonth(amount) {
@@ -381,6 +452,11 @@ async function changeMonth(amount) {
   updateEditor();
 }
 
+function handleFormatButtonPointerDown(event) {
+  saveSelection();
+  event.preventDefault();
+}
+
 function bindEvents() {
   els.prevMonth.addEventListener('click', () => changeMonth(-1));
   els.nextMonth.addEventListener('click', () => changeMonth(1));
@@ -388,11 +464,16 @@ function bindEvents() {
   els.editor.addEventListener('mouseup', saveSelection);
   els.editor.addEventListener('keyup', saveSelection);
   els.editor.addEventListener('touchend', saveSelection);
+  document.addEventListener('selectionchange', saveSelection);
+
   els.saveNow.addEventListener('click', saveRecord);
-  els.clearFormat.addEventListener('mousedown', (event) => event.preventDefault());
+  els.clearFormat.addEventListener('pointerdown', handleFormatButtonPointerDown);
+  els.clearFormat.addEventListener('mousedown', handleFormatButtonPointerDown);
   els.clearFormat.addEventListener('click', clearFormat);
+
   document.querySelectorAll('[data-color]').forEach((button) => {
-    button.addEventListener('mousedown', (event) => event.preventDefault());
+    button.addEventListener('pointerdown', handleFormatButtonPointerDown);
+    button.addEventListener('mousedown', handleFormatButtonPointerDown);
     button.addEventListener('click', () => applyHighlight(button.dataset.color));
   });
 }
