@@ -130,6 +130,12 @@ h1 {
 
 .day-cell {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  vertical-align: top;
+  appearance: none;
   min-height: clamp(78px, calc((100vh - 302px) / 6), 104px);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -155,20 +161,40 @@ h1 {
   font-size: 0.66rem;
   font-weight: 800;
 }
-.day-topline { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-.day-number { font-size: 1.05rem; font-weight: 900; line-height: 1; }
+.day-topline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 18px;
+  height: 18px;
+  min-height: 18px;
+  margin-bottom: 6px;
+  line-height: 18px;
+}
+.day-number {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1;
+}
 .report-badge {
   display: none;
-  padding: 2px 6px;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
   border-radius: 999px;
   background: #efe1d2;
   color: var(--accent-strong);
   font-size: 0.66rem;
   font-weight: 900;
+  line-height: 18px;
 }
 .day-cell.report-day .report-badge { display: inline-flex; }
 .day-preview {
-  min-height: 42px;
+  flex: 1 1 auto;
+  min-height: 0;
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.42;
@@ -287,7 +313,9 @@ h1 {
   .toolbar .soft-button:first-child, .toolbar .soft-button:last-child { justify-self: stretch; }
   .weekdays, .calendar-grid { gap: 6px; }
   .day-cell { min-height: 92px; padding: 8px; border-radius: 14px; }
-  .day-number { font-size: 1rem; }
+  .day-topline { flex-basis: 17px; height: 17px; min-height: 17px; line-height: 17px; }
+  .day-number { height: 17px; font-size: 1rem; }
+  .report-badge { height: 17px; line-height: 17px; }
   .day-preview { font-size: 0.76rem; -webkit-line-clamp: 3; }
   .editor-head, .editor-actions { flex-direction: column; align-items: stretch; }
   h1 { font-size: 2.7rem; }
