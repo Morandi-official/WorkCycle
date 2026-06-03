@@ -73,6 +73,12 @@ function mondayIndex(date) {
   return (date.getDay() + 6) % 7;
 }
 
+function calendarGridStartDate(firstOfMonth) {
+  const offset = mondayIndex(firstOfMonth);
+  const daysBack = offset === 0 ? 7 : offset;
+  return addDays(firstOfMonth, -daysBack);
+}
+
 function cycleIndex(date) {
   const epochThursday = new Date(2024, 0, 4);
   const diff = Math.floor((stripTime(date) - epochThursday) / 86400000);
@@ -262,7 +268,7 @@ function renderCalendar() {
   els.calendarGrid.textContent = '';
 
   const first = startOfMonth(viewDate);
-  const start = addDays(first, -mondayIndex(first));
+  const start = calendarGridStartDate(first);
   const today = stripTime(new Date());
 
   for (let i = 0; i < 42; i += 1) {
